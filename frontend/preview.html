@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Preview - Radiology Report Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: rgba(31, 71, 136, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .meta-value {
+            font-weight: 500;
+        }
+        
+        .recommendation-list {
+            padding-left: 1.5rem;
+        }
+        .recommendation-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Edit specific styling */
+        select.editable {
+            font-family: inherit;
+            font-size: inherit;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span class="logo-text">RadAI Reports</span>
+        </a>
+        <div style="display: flex; gap: 1rem;">
+            <a href="#" id="back-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Back to Dashboard</a>
+            <a href="generate.html" onclick="sessionStorage.setItem('isGenerateAgain', 'true')" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M2 12a10 10 0 1 0 10-10"></path><path d="M12 2v4"></path><path d="M12 2h-4"></path><path d="M21.12 6.88a3 3 0 1 1-4.24-4.24 3 3 0 0 1 4.24 4.24z"></path></svg>
+                Generate Again
+            </a>
+            <button id="toggle-edit-btn" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Edit Mode
+            </button>
+            <button id="download-btn" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download PDF
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="report-container" class="glass-panel slide-up" style="max-width: 900px;">
+            <!-- Report content will be injected here -->
+        </div>
+    </main>
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary-dark);">Generating PDF...</h3>
+    </div>
+
+    <script>
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        let reportData = null;
+        let isEditMode = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawData = sessionStorage.getItem('currentReport');
+            if (!rawData) {
+                alert('No report found. Redirecting to generate page.');
+                window.location.href = 'generate.html';
+                return;
+            }
+            reportData = JSON.parse(rawData);
+            renderReport();
+            
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) {
+                backBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (document.referrer && (document.referrer.includes('admin.html') || document.referrer.includes('index.html'))) {
+                        window.location.href = document.referrer;
+                    } else if (sessionStorage.getItem('is_admin') === 'true') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+        });
+
+        function renderReport() {
+            const container = document.getElementById('report-container');
+            const ed = isEditMode ? 'contenteditable="true"' : '';
+            const cl = isEditMode ? 'editable' : '';
+            
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                    <h1 style="margin: 0;">RADIOLOGY REPORT</h1>
+                    <div style="text-align: right;">
+                        <div class="meta-label">Radiologist</div>
+                        <div ${ed} class="meta-value ${cl}" data-field="radiologist_name">${reportData.radiologist_name || 'Dr. System'}</div>
+                    </div>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Patient Name</span>
+                        <span ${ed} class="meta-value ${cl}" data-field="patient_name">${reportData.patient_name}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Patient ID</span>
+                        <span ${ed} class="meta-value ${cl}" data-field="patient_id">${reportData.patient_id}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Study Date</span>
+                        <span ${ed} class="meta-value ${cl}" data-field="study_date">${reportData.study_date}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Modality</span>
+                        <span ${ed} class="meta-value ${cl}" data-field="modality">${reportData.modality}</span>
+                    </div>
+                    <div class="meta-item" style="grid-column: span 2;">
+                        <span class="meta-label">Study Type</span>
+                        <span ${ed} class="meta-value ${cl}" data-field="study_type">${reportData.study_type}</span>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h2 class="report-section-title">Findings</h2>
+                    <div class="report-grid">
+                        ${reportData.findings.map((f, i) => `
+                            <div class="finding-item">
+                                <div class="finding-header">
+                                    <span ${ed} class="finding-location ${cl}" data-index="${i}" data-subfield="location">${f.location}</span>
+                                    ${isEditMode ? `
+                                        <select class="badge badge-${f.severity} editable" data-index="${i}" data-subfield="severity">
+                                            <option value="mild" ${f.severity==='mild'?'selected':''}>MILD</option>
+                                            <option value="moderate" ${f.severity==='moderate'?'selected':''}>MODERATE</option>
+                                            <option value="severe" ${f.severity==='severe'?'selected':''}>SEVERE</option>
+                                        </select>
+                                    ` : `
+                                        <span class="badge badge-${f.severity}">${f.severity}</span>
+                                    `}
+                                </div>
+                                <div ${ed} class="${cl}" style="font-size: 0.95rem; color: var(--text-secondary);" data-index="${i}" data-subfield="description">${f.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h2 class="report-section-title">Impression</h2>
+                    <div ${ed} class="${cl}" data-field="impression" style="line-height: 1.6;">${reportData.impression}</div>
+                </div>
+            `;
+
+            if (reportData.recommendations && reportData.recommendations.length > 0) {
+                html += `
+                    <div class="report-section">
+                        <h2 class="report-section-title">Recommendations</h2>
+                        <ul class="recommendation-list">
+                            ${reportData.recommendations.map((r, i) => `
+                                <li ${ed} class="${cl}" data-rec-index="${i}">${r}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (isEditMode) {
+                html = `<div class="edit-mode">${html}</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function syncDataFromDOM() {
+            // Meta fields
+            document.querySelectorAll('[data-field]').forEach(el => {
+                const field = el.getAttribute('data-field');
+                reportData[field] = el.innerText.trim();
+            });
+
+            // Findings
+            document.querySelectorAll('[data-index]').forEach(el => {
+                const index = parseInt(el.getAttribute('data-index'));
+                const subfield = el.getAttribute('data-subfield');
+                if (el.tagName === 'SELECT') {
+                    reportData.findings[index][subfield] = el.value;
+                } else {
+                    reportData.findings[index][subfield] = el.innerText.trim();
+                }
+            });
+
+            // Recommendations
+            if (reportData.recommendations) {
+                document.querySelectorAll('[data-rec-index]').forEach(el => {
+                    const index = parseInt(el.getAttribute('data-rec-index'));
+                    reportData.recommendations[index] = el.innerText.trim();
+                });
+            }
+            
+            // Save updated to session storage
+            sessionStorage.setItem('currentReport', JSON.stringify(reportData));
+        }
+
+        document.getElementById('toggle-edit-btn').addEventListener('click', (e) => {
+            if (isEditMode) {
+                // Switching from Edit to View -> Save data
+                syncDataFromDOM();
+                isEditMode = false;
+                e.currentTarget.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Edit Mode';
+                e.currentTarget.classList.replace('btn-primary', 'btn-secondary');
+            } else {
+                // Switching from View to Edit
+                isEditMode = true;
+                e.currentTarget.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Changes';
+                e.currentTarget.classList.replace('btn-secondary', 'btn-primary');
+            }
+            renderReport();
+        });
+
+        document.getElementById('download-btn').addEventListener('click', async () => {
+            if (isEditMode) {
+                syncDataFromDOM(); // ensure we have the latest if downloaded while in edit mode
+            }
+            
+            const loader = document.getElementById('loader');
+            loader.classList.add('active');
+
+            try {
+                const response = await fetch('http://localhost:8000/create-pdf-from-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                // Get filename from Content-Disposition if present, or fallback
+                let filename = "Radiology_Report.pdf";
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    filename = disposition.split('filename=')[1].replace(/["']/g, '');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error("Error downloading PDF:", error);
+                alert("Failed to download PDF. " + error.message);
+            } finally {
+                loader.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

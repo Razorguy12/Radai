@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiology Report Generator</title>
+    <meta name="description" content="AI-powered Radiology Report Generation">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span class="logo-text">RadAI Reports</span>
+        </a>
+        <nav style="display: flex; gap: 1rem; align-items: center;" id="nav-container">
+            <a href="admin.html" class="btn btn-secondary" id="admin-btn" style="display: none; padding: 0.5rem 1rem;">Admin Dashboard</a>
+            <a href="generate.html" class="btn btn-primary" id="generate-btn" style="display: none;">Get Started</a>
+            <a href="login.html" class="btn btn-primary" id="login-btn" style="display: none;">Login</a>
+            <button id="logout-btn" class="btn btn-secondary" style="display: none; padding: 0.5rem 1rem;">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div id="dashboard-content" style="display: none;" class="slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1 id="dashboard-greeting" style="margin: 0; color: var(--primary-color);">Welcome</h1>
+                <a href="generate.html" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; padding: 0.75rem 1.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Report
+                </a>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <input type="text" id="search-input" class="form-control" placeholder="Search previous reports by Patient ID..." style="max-width: 400px; padding: 0.75rem;">
+            </div>
+            
+            <h3 style="margin-bottom: 1rem; color: var(--text-muted);">Previous Reports</h3>
+            <div id="reports-matrix" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Reports will be injected here -->
+            </div>
+        </div>
+        
+        <div id="guest-content" class="glass-panel slide-up center-content" style="text-align: center;">
+            <h1>Intelligent Radiology Reporting</h1>
+            <p style="margin-bottom: 2rem;">Please log in to generate and manage reports.</p>
+            <a href="login.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">Login</a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = sessionStorage.getItem('token');
+            const userName = sessionStorage.getItem('user_name');
+            const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+
+            const adminBtn = document.getElementById('admin-btn');
+            const generateBtn = document.getElementById('generate-btn');
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            const dashboardContent = document.getElementById('dashboard-content');
+            const guestContent = document.getElementById('guest-content');
+            const dashboardGreeting = document.getElementById('dashboard-greeting');
+            const reportsMatrix = document.getElementById('reports-matrix');
+            const searchInput = document.getElementById('search-input');
+            
+            let allReports = [];
+
+            if (token) {
+                guestContent.style.display = 'none';
+                dashboardContent.style.display = 'block';
+                
+                dashboardGreeting.textContent = `Welcome, ${userName}`;
+                logoutBtn.style.display = 'inline-flex';
+                
+                if (isAdmin) {
+                    adminBtn.style.display = 'inline-flex';
+                }
+                
+                // Fetch reports
+                try {
+                    const response = await fetch('http://localhost:8000/reports', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        allReports = await response.json();
+                        renderReports(allReports);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch reports", err);
+                }
+            } else {
+                loginBtn.style.display = 'inline-flex';
+                guestContent.style.display = 'block';
+                dashboardContent.style.display = 'none';
+            }
+
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.clear();
+                window.location.href = 'login.html';
+            });
+            
+            function renderReports(reports) {
+                reportsMatrix.innerHTML = '';
+                if (reports.length === 0) {
+                    reportsMatrix.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1;">No reports found.</p>';
+                    return;
+                }
+                
+                reports.forEach(report => {
+                    const date = new Date(report.created_at).toLocaleDateString();
+                    const card = document.createElement('div');
+                    card.className = 'glass-panel';
+                    card.style.padding = '1.5rem';
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+                    card.style.gap = '0.5rem';
+                    card.style.borderLeft = '4px solid var(--primary-color)';
+                    card.style.cursor = 'pointer';
+                    
+                    card.addEventListener('mouseover', () => card.style.transform = 'translateY(-2px)');
+                    card.addEventListener('mouseout', () => card.style.transform = 'translateY(0)');
+                    card.style.transition = 'transform 0.2s';
+                    
+                    card.innerHTML = `
+                        <h4 style="margin: 0; font-size: 1.1rem; color: var(--primary-dark);">${report.patient_name}</h4>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">ID: <strong>${report.patient_id}</strong></div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem;">
+                            <span style="background: rgba(31,71,136,0.1); padding: 2px 8px; border-radius: 12px; color: var(--primary-color);">${report.modality}</span>
+                            <span>${date}</span>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => {
+                        sessionStorage.setItem('currentReport', JSON.stringify(report.report_data));
+                        window.location.href = 'preview.html';
+                    });
+                    
+                    reportsMatrix.appendChild(card);
+                });
+            }
+            
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = allReports.filter(r => r.patient_id.toLowerCase().includes(term));
+                renderReports(filtered);
+            });
+        });
+    </script>
+</body>
+</html>

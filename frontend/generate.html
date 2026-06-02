@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Report - Radiology Report Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span class="logo-text">RadAI Reports</span>
+        </a>
+    </header>
+
+    <main class="container">
+        <div class="glass-panel slide-up">
+            <h2>New Study Parameters</h2>
+            <p>Enter the details below to generate a comprehensive AI report.</p>
+            
+            <form id="generate-form">
+                <div class="form-group">
+                    <label class="form-label" for="patient_info">Patient Information *</label>
+                    <textarea class="form-control" id="patient_info" placeholder="e.g., John Doe, 45yo Male, ID: 123456" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="study_info">Study Information *</label>
+                    <textarea class="form-control" id="study_info" placeholder="e.g., CT Abdomen and Pelvis w/ Contrast, Sept 14 2024" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="clinical_info">Clinical Information (Optional)</label>
+                    <textarea class="form-control" id="clinical_info" placeholder="e.g., Right lower quadrant pain, rule out appendicitis"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="radiologist_findings">Radiologist Findings (Optional)</label>
+                    <textarea class="form-control" id="radiologist_findings" placeholder="e.g., 5mm nodule in right upper lobe. No pleural effusion."></textarea>
+                </div>
+                
+                <div class="actions-bar" style="margin-top: 1rem; padding-top: 1rem;">
+                    <a href="index.html" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary-dark);">Analyzing Images & Synthesizing Findings</h3>
+        <p style="color: var(--primary-color); font-weight: 500;">This may take a few moments...</p>
+    </div>
+
+    <script>
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Load previous inputs if they exist AND we came from "Generate Again" button
+        document.addEventListener('DOMContentLoaded', () => {
+            const isGenerateAgain = sessionStorage.getItem('isGenerateAgain');
+            if (isGenerateAgain === 'true') {
+                const savedParams = sessionStorage.getItem('generateParams');
+                if (savedParams) {
+                    const params = JSON.parse(savedParams);
+                    document.getElementById('patient_info').value = params.patient_info || '';
+                    document.getElementById('study_info').value = params.study_info || '';
+                    document.getElementById('clinical_info').value = params.clinical_info || '';
+                    document.getElementById('radiologist_findings').value = params.radiologist_findings || '';
+                }
+                // Clear the flag so a normal reload starts fresh
+                sessionStorage.removeItem('isGenerateAgain');
+            } else {
+                // If it's a normal load, clear the saved inputs
+                sessionStorage.removeItem('generateParams');
+            }
+        });
+
+        document.getElementById('generate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const patient_info = document.getElementById('patient_info').value;
+            const study_info = document.getElementById('study_info').value;
+            const clinical_info = document.getElementById('clinical_info').value;
+            const radiologist_findings = document.getElementById('radiologist_findings').value;
+            
+            // Save inputs to session storage for "Generate Again" feature
+            const params = { patient_info, study_info, clinical_info, radiologist_findings };
+            sessionStorage.setItem('generateParams', JSON.stringify(params));
+            
+            const loader = document.getElementById('loader');
+            loader.classList.add('active');
+            
+            try {
+                const response = await fetch('http://localhost:8000/generate-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        patient_info,
+                        study_info,
+                        clinical_info,
+                        radiologist_findings
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${await response.text()}`);
+                }
+                
+                const reportData = await response.json();
+                
+                // Save to session storage for the preview page
+                sessionStorage.setItem('currentReport', JSON.stringify(reportData));
+                
+                // Navigate to preview
+                window.location.href = 'preview.html';
+                
+            } catch (error) {
+                console.error("Error generating report:", error);
+                alert("Failed to generate report. Make sure the backend is running and OPENAI_API_KEY is set. Error: " + error.message);
+                loader.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

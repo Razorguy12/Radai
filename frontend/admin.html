@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Radiology Report Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .users-table th {
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: rgba(31, 71, 136, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <a href="index.html" class="logo-container">
+            <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+            </svg>
+            <span class="logo-text">RadAI Reports <span
+                    style="color: var(--danger-color); font-size: 0.8rem; margin-left: 0.5rem; border: 1px solid var(--danger-color); padding: 2px 6px; border-radius: 4px;">ADMIN</span></span>
+        </a>
+        <nav style="display: flex; gap: 1rem; align-items: center;">
+            <a href="index.html" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Back to Home</a>
+            <button id="logout-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 style="margin-bottom: 0.5rem;">Admin Dashboard</h1>
+        <p id="user-greeting"
+            style="margin-bottom: 2rem; font-size: 1.1rem; color: var(--primary-color); font-weight: 500;"></p>
+
+        <div class="admin-tabs"
+            style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <button id="tab-users" class="tab-btn active"
+                style="background: none; border: none; font-size: 1.1rem; font-weight: 600; color: var(--primary-color); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary-color);">Manage
+                Users</button>
+            <button id="tab-my-reports" class="tab-btn"
+                style="background: none; border: none; font-size: 1.1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem;">My
+                Reports</button>
+        </div>
+
+        <div id="users-section" class="admin-grid">
+            <!-- Add User Form -->
+            <div class="glass-panel slide-up" style="padding: 2rem;">
+                <h2>Add New Doctor</h2>
+                <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">Register a new user who can generate reports.</p>
+
+                <form id="add-user-form">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" required placeholder="Dr. John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="form-group"
+                        style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="is_admin" style="width: 1rem; height: 1rem; cursor: pointer;">
+                        <label for="is_admin" style="cursor: pointer; font-weight: 500;">Grant Admin Privileges</label>
+                    </div>
+                    <div id="form-msg" style="margin-bottom: 1rem; font-weight: 500;"></div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                </form>
+            </div>
+
+            <!-- Users List -->
+            <div class="glass-panel slide-up delay-1" style="padding: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="margin: 0;">Registered Users</h2>
+                    <button id="refresh-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Refresh</button>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" id="user-search" class="form-control"
+                        placeholder="Search users by name or username...">
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="users-table" style="cursor: pointer;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="user-reports-section" style="display: none;" class="slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 id="reports-user-title" style="margin: 0; color: var(--primary-dark);">Reports for User</h2>
+                <button id="back-to-users-btn" class="btn btn-secondary">Back to Users</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <input type="text" id="report-search" class="form-control" placeholder="Search reports by Patient ID..."
+                    style="max-width: 400px;">
+            </div>
+
+            <div id="admin-reports-matrix"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Reports injected here -->
+            </div>
+        </div>
+
+        <div id="my-reports-section" style="display: none;" class="slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="margin: 0; color: var(--primary-dark);">My Reports</h2>
+                <a href="generate.html" class="btn btn-primary"
+                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; padding: 0.75rem 1.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Report
+                </a>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <input type="text" id="my-report-search" class="form-control"
+                    placeholder="Search my reports by Patient ID..." style="max-width: 400px;">
+            </div>
+            <div id="my-reports-matrix"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Reports injected here -->
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        const isAdmin = sessionStorage.getItem('is_admin') === 'true';
+        if (!isAdmin) {
+            alert("You do not have permission to view this page.");
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('user-greeting').textContent = `Welcome, ${sessionStorage.getItem('user_name')}`;
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        // Elements
+        const tabUsers = document.getElementById('tab-users');
+        const tabMyReports = document.getElementById('tab-my-reports');
+        const usersSection = document.getElementById('users-section');
+        const userReportsSection = document.getElementById('user-reports-section');
+        const myReportsSection = document.getElementById('my-reports-section');
+
+        const tbody = document.getElementById('users-tbody');
+        const userSearch = document.getElementById('user-search');
+
+        const adminReportsMatrix = document.getElementById('admin-reports-matrix');
+        const reportSearch = document.getElementById('report-search');
+        const reportsUserTitle = document.getElementById('reports-user-title');
+
+        const myReportsMatrix = document.getElementById('my-reports-matrix');
+        const myReportSearch = document.getElementById('my-report-search');
+
+        let allUsers = [];
+        let currentAdminUserReports = [];
+        let myReports = [];
+
+        // Tab Switching
+        tabUsers.addEventListener('click', () => {
+            tabUsers.classList.add('active');
+            tabUsers.style.color = 'var(--primary-color)';
+            tabUsers.style.borderBottom = '2px solid var(--primary-color)';
+
+            tabMyReports.classList.remove('active');
+            tabMyReports.style.color = 'var(--text-muted)';
+            tabMyReports.style.borderBottom = 'none';
+
+            usersSection.style.display = 'grid';
+            userReportsSection.style.display = 'none';
+            myReportsSection.style.display = 'none';
+        });
+
+        tabMyReports.addEventListener('click', () => {
+            tabMyReports.classList.add('active');
+            tabMyReports.style.color = 'var(--primary-color)';
+            tabMyReports.style.borderBottom = '2px solid var(--primary-color)';
+
+            tabUsers.classList.remove('active');
+            tabUsers.style.color = 'var(--text-muted)';
+            tabUsers.style.borderBottom = 'none';
+
+            usersSection.style.display = 'none';
+            userReportsSection.style.display = 'none';
+            myReportsSection.style.display = 'block';
+
+            fetchMyReports();
+        });
+
+        document.getElementById('back-to-users-btn').addEventListener('click', () => {
+            userReportsSection.style.display = 'none';
+            usersSection.style.display = 'grid';
+        });
+
+        // Users
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:8000/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Failed to fetch users");
+                allUsers = await response.json();
+                renderUsers(allUsers);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderUsers(users) {
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.addEventListener('mouseover', () => tr.style.backgroundColor = 'rgba(31,71,136,0.05)');
+                tr.addEventListener('mouseout', () => tr.style.backgroundColor = 'transparent');
+
+                tr.innerHTML = `
+                    <td style="font-weight: 500;">${u.name}</td>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td>
+                        <span class="badge ${u.is_admin ? 'badge-severe' : 'badge-mild'}">
+                            ${u.is_admin ? 'ADMIN' : 'DOCTOR'}
+                        </span>
+                    </td>
+                `;
+                tr.addEventListener('click', () => {
+                    reportsUserTitle.textContent = `Reports for ${u.name}`;
+                    usersSection.style.display = 'none';
+                    userReportsSection.style.display = 'block';
+                    fetchUserReports(u.id);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        userSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allUsers.filter(u => u.name.toLowerCase().includes(term) || u.username.toLowerCase().includes(term));
+            renderUsers(filtered);
+        });
+
+        document.getElementById('refresh-btn').addEventListener('click', fetchUsers);
+
+        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgDiv = document.getElementById('form-msg');
+            msgDiv.textContent = '';
+
+            const payload = {
+                name: document.getElementById('name').value,
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                is_admin: document.getElementById('is_admin').checked
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to create user');
+                }
+
+                msgDiv.style.color = 'var(--success-color)';
+                msgDiv.textContent = 'User created successfully!';
+                document.getElementById('add-user-form').reset();
+                fetchUsers(); // Refresh list
+
+            } catch (err) {
+                msgDiv.style.color = 'var(--danger-color)';
+                msgDiv.textContent = err.message;
+            }
+        });
+
+        // Reports
+        function createReportCard(report) {
+            const date = new Date(report.created_at).toLocaleDateString();
+            const card = document.createElement('div');
+            card.className = 'glass-panel';
+            card.style.padding = '1.5rem';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.gap = '0.5rem';
+            card.style.borderLeft = '4px solid var(--primary-color)';
+            card.style.cursor = 'pointer';
+
+            card.addEventListener('mouseover', () => card.style.transform = 'translateY(-2px)');
+            card.addEventListener('mouseout', () => card.style.transform = 'translateY(0)');
+            card.style.transition = 'transform 0.2s';
+
+            card.innerHTML = `
+                <h4 style="margin: 0; font-size: 1.1rem; color: var(--primary-dark);">${report.patient_name}</h4>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">ID: <strong>${report.patient_id}</strong></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem;">
+                    <span style="background: rgba(31,71,136,0.1); padding: 2px 8px; border-radius: 12px; color: var(--primary-color);">${report.modality}</span>
+                    <span>${date}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                sessionStorage.setItem('currentReport', JSON.stringify(report.report_data));
+                window.location.href = 'preview.html';
+            });
+
+            return card;
+        }
+
+        function renderReports(reports, container) {
+            container.innerHTML = '';
+            if (reports.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1;">No reports found.</p>';
+                return;
+            }
+            reports.forEach(report => {
+                container.appendChild(createReportCard(report));
+            });
+        }
+
+        async function fetchUserReports(userId) {
+            adminReportsMatrix.innerHTML = '<p>Loading...</p>';
+            try {
+                const response = await fetch(`http://localhost:8000/admin/users/${userId}/reports`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Failed to fetch reports");
+                currentAdminUserReports = await response.json();
+                renderReports(currentAdminUserReports, adminReportsMatrix);
+            } catch (err) {
+                console.error(err);
+                adminReportsMatrix.innerHTML = '<p style="color: var(--danger-color);">Failed to load reports.</p>';
+            }
+        }
+
+        reportSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = currentAdminUserReports.filter(r => r.patient_id.toLowerCase().includes(term));
+            renderReports(filtered, adminReportsMatrix);
+        });
+
+        async function fetchMyReports() {
+            myReportsMatrix.innerHTML = '<p>Loading...</p>';
+            try {
+                const response = await fetch('http://localhost:8000/reports', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Failed to fetch reports");
+                myReports = await response.json();
+                renderReports(myReports, myReportsMatrix);
+            } catch (err) {
+                console.error(err);
+                myReportsMatrix.innerHTML = '<p style="color: var(--danger-color);">Failed to load reports.</p>';
+            }
+        }
+
+        myReportSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = myReports.filter(r => r.patient_id.toLowerCase().includes(term));
+            renderReports(filtered, myReportsMatrix);
+        });
+
+        // Initial fetch
+        fetchUsers();
+    </script>
+</body>
+
+</html>

@@ -98,7 +98,7 @@
             loader.classList.add('active');
             
             try {
-                const response = await fetch('http://localhost:8000/generate-report', {
+                const response = await fetch('/api/generate-report', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

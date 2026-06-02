@@ -255,7 +255,7 @@
         // Users
         async function fetchUsers() {
             try {
-                const response = await fetch('http://localhost:8000/users', {
+                const response = await fetch('/api/users', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error("Failed to fetch users");
@@ -316,7 +316,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:8000/users', {
+                const response = await fetch('/api/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -388,7 +388,7 @@
         async function fetchUserReports(userId) {
             adminReportsMatrix.innerHTML = '<p>Loading...</p>';
             try {
-                const response = await fetch(`http://localhost:8000/admin/users/${userId}/reports`, {
+                const response = await fetch(`/api/admin/users/${userId}/reports`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error("Failed to fetch reports");
@@ -409,7 +409,7 @@
         async function fetchMyReports() {
             myReportsMatrix.innerHTML = '<p>Loading...</p>';
             try {
-                const response = await fetch('http://localhost:8000/reports', {
+                const response = await fetch('/api/reports', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error("Failed to fetch reports");

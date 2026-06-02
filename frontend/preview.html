@@ -256,7 +256,7 @@
             loader.classList.add('active');
 
             try {
-                const response = await fetch('http://localhost:8000/create-pdf-from-report', {
+                const response = await fetch('/api/create-pdf-from-report', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

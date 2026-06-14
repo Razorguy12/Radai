@@ -15,7 +15,7 @@
             </svg>
             <span class="logo-text">RadAI Reports</span>
         </a>
-        <nav style="display: flex; gap: 1rem; align-items: center;" id="nav-container">
+        <nav class="header-nav" id="nav-container">
             <a href="admin.html" class="btn btn-secondary" id="admin-btn" style="display: none; padding: 0.5rem 1rem;">Admin Dashboard</a>
             <a href="generate.html" class="btn btn-primary" id="generate-btn" style="display: none;">Get Started</a>
             <a href="login.html" class="btn btn-primary" id="login-btn" style="display: none;">Login</a>
@@ -25,7 +25,7 @@
 
     <main class="container">
         <div id="dashboard-content" style="display: none;" class="slide-up">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="dashboard-header">
                 <h1 id="dashboard-greeting" style="margin: 0; color: var(--primary-color);">Welcome</h1>
                 <a href="generate.html" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; padding: 0.75rem 1.5rem;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,7 +41,7 @@
             </div>
             
             <h3 style="margin-bottom: 1rem; color: var(--text-muted);">Previous Reports</h3>
-            <div id="reports-matrix" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            <div id="reports-matrix" class="reports-matrix">
                 <!-- Reports will be injected here -->
             </div>
         </div>

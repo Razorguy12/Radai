@@ -50,7 +50,7 @@
             <span class="logo-text">RadAI Reports <span
                     style="color: var(--danger-color); font-size: 0.8rem; margin-left: 0.5rem; border: 1px solid var(--danger-color); padding: 2px 6px; border-radius: 4px;">ADMIN</span></span>
         </a>
-        <nav style="display: flex; gap: 1rem; align-items: center;">
+        <nav class="header-nav">
             <a href="index.html" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Back to Home</a>
             <button id="logout-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Logout</button>
         </nav>
@@ -73,7 +73,7 @@
 
         <div id="users-section" class="admin-grid">
             <!-- Add User Form -->
-            <div class="glass-panel slide-up" style="padding: 2rem;">
+            <div class="glass-panel slide-up">
                 <h2>Add New Doctor</h2>
                 <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">Register a new user who can generate reports.</p>
 
@@ -105,8 +105,8 @@
             </div>
 
             <!-- Users List -->
-            <div class="glass-panel slide-up delay-1" style="padding: 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div class="glass-panel slide-up delay-1">
+                <div class="dashboard-header" style="margin-bottom: 1.5rem;">
                     <h2 style="margin: 0;">Registered Users</h2>
                     <button id="refresh-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Refresh</button>
                 </div>
@@ -135,7 +135,7 @@
         </div>
 
         <div id="user-reports-section" style="display: none;" class="slide-up">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div class="dashboard-header" style="margin-bottom: 1.5rem;">
                 <h2 id="reports-user-title" style="margin: 0; color: var(--primary-dark);">Reports for User</h2>
                 <button id="back-to-users-btn" class="btn btn-secondary">Back to Users</button>
             </div>
@@ -145,17 +145,15 @@
                     style="max-width: 400px;">
             </div>
 
-            <div id="admin-reports-matrix"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            <div id="admin-reports-matrix" class="reports-matrix">
                 <!-- Reports injected here -->
             </div>
         </div>
 
         <div id="my-reports-section" style="display: none;" class="slide-up">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="dashboard-header">
                 <h2 style="margin: 0; color: var(--primary-dark);">My Reports</h2>
-                <a href="generate.html" class="btn btn-primary"
-                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; padding: 0.75rem 1.5rem;">
+                <a href="generate.html" class="btn btn-primary header-nav">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -168,8 +166,7 @@
                 <input type="text" id="my-report-search" class="form-control"
                     placeholder="Search my reports by Patient ID..." style="max-width: 400px;">
             </div>
-            <div id="my-reports-matrix"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            <div id="my-reports-matrix" class="reports-matrix">
                 <!-- Reports injected here -->
             </div>
         </div>

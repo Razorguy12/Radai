@@ -231,7 +231,7 @@ async def get_user_reports(user_id: int, db: Session = Depends(get_db), current_
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
-    api_key_status = "configured" if os.getenv("OPENAI_API_KEY") else "missing"
+    api_key_status = "configured" if os.getenv("GROQ_API_KEY") else "missing"
     return {
         "status": "healthy",
         "api_key": api_key_status
@@ -242,4 +242,5 @@ app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

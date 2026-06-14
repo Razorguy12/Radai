@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 import os
 import json
@@ -13,7 +13,7 @@ from datetime import datetime
 
 # Load environment variables
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ==================== Pydantic Models ====================
 
@@ -40,7 +40,7 @@ class RadiologyReport(BaseModel):
 
 def generate_report(user_input: str) -> RadiologyReport:
     """
-    Generate a structured radiology report using OpenAI's Structured Outputs API.
+    Generate a structured radiology report using Groq API.
     
     Args:
         user_input: Key information about the imaging study
@@ -48,16 +48,20 @@ def generate_report(user_input: str) -> RadiologyReport:
     Returns:
         RadiologyReport: Structured report as Pydantic model
     """
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = Groq(api_key=GROQ_API_KEY)
+    schema = RadiologyReport.model_json_schema()
     
-    response = client.beta.chat.completions.parse(
-        model="gpt-4o-2024-08-06",
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
-                "content": """You are an expert radiologist. Generate comprehensive, 
+                "content": f"""You are an expert radiologist. Generate comprehensive, 
                 realistic, and plausible radiology reports based on the information provided. 
-                Ensure all findings are clinically appropriate and well-documented.""",
+                Ensure all findings are clinically appropriate and well-documented.
+                
+                You MUST return a JSON object that strictly adheres to the following JSON schema:
+                {json.dumps(schema)}""",
             },
             {
                 "role": "user",
@@ -68,10 +72,11 @@ def generate_report(user_input: str) -> RadiologyReport:
                 Provide findings with appropriate anatomical locations and clinical severity levels.""",
             },
         ],
-        response_format=RadiologyReport,
+        response_format={"type": "json_object"},
     )
     
-    report = response.choices[0].message.parsed
+    report_dict = json.loads(response.choices[0].message.content)
+    report = RadiologyReport.model_validate(report_dict)
     return report
 
 # ==================== PDF Generation ====================

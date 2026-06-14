@@ -1,5 +1,5 @@
 fastapi[standard]
-openai
+groq
 python-dotenv
 pdfplumber
 reportlab

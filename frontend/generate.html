@@ -126,7 +126,7 @@
                 
             } catch (error) {
                 console.error("Error generating report:", error);
-                alert("Failed to generate report. Make sure the backend is running and OPENAI_API_KEY is set. Error: " + error.message);
+                alert("Failed to generate report. Make sure the backend is running and GROQ_API_KEY is set. Error: " + error.message);
                 loader.classList.remove('active');
             }
         });

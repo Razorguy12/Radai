@@ -12,6 +12,9 @@ load_dotenv()
 # postgresql://user:password@localhost:5432/radiology_db
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 if not SQLALCHEMY_DATABASE_URL:
     # We fallback to sqlite for testing purposes if they haven't set the postgres URL yet
     print("WARNING: DATABASE_URL not found in environment, falling back to sqlite")

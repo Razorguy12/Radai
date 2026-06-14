@@ -1,11 +1,11 @@
 # Radiology Report Generator
 
-A FastAPI-based system that generates professional radiology reports using OpenAI's LLM and converts them to PDF format.
+A FastAPI-based system that generates professional radiology reports using Groq's LLM (Qwen 2.5 32B) and converts them to PDF format.
 
 ## Features
 
 - **Pydantic Models**: Structured radiology report format with findings, impressions, and recommendations
-- **LLM-Powered Generation**: Uses OpenAI to generate realistic radiology reports from key information
+- **LLM-Powered Generation**: Uses Groq (Qwen 2.5 32B) to generate realistic radiology reports from key information
 - **PDF Export**: Converts structured reports to professionally formatted PDF documents
 - **FastAPI REST API**: Easy-to-use endpoints for report generation and PDF download
 
@@ -25,10 +25,10 @@ Create a `.env` file in the project root:
 cp .env.example .env
 ```
 
-Edit `.env` and add your OpenAI API key:
+Edit `.env` and add your Groq API key:
 
 ```
-OPENAI_API_KEY=sk-your-key-here
+GROQ_API_KEY=gsk_your-key-here
 ```
 
 ## Project Structure
@@ -154,14 +154,14 @@ curl -X POST "http://localhost:8000/generate-report" \
 
 - **FastAPI**: Web framework
 - **Pydantic**: Data validation and serialization
-- **OpenAI**: LLM API for report generation
+- **Groq**: LLM API for report generation
 - **ReportLab**: PDF generation
 - **python-dotenv**: Environment variable management
 - **Uvicorn**: ASGI server
 
 ## Notes
 
-- The system uses Claude 3.5 Sonnet model from Anthropic for report generation (update the model name in `model.py` if needed)
+- The system uses Qwen 2.5 32B model from Groq for report generation (update the model name in `model.py` if needed)
 - Generated reports are realistic but plausible - use for demonstration and testing only
 - PDFs are saved to the current working directory with timestamp-based filenames
 - All timestamps in generated reports use UTC
@@ -178,17 +178,17 @@ Modify the `report_to_pdf()` function in `model/model.py` to change colors, font
 
 ### Change LLM Model
 
-Update the `model` parameter in the `generate_report()` function to use a different OpenAI model.
+Update the `model` parameter in the `generate_report()` function to use a different Groq model.
 
 ## Troubleshooting
 
-**"Missing OPENAI_API_KEY"**
+**"Missing GROQ_API_KEY"**
 - Make sure `.env` file exists with your API key
 - Check that the key is valid and has sufficient credits
 
 **"Invalid API Key"**
 - Verify the API key in `.env` is correct
-- Get a new key from https://platform.openai.com/api-keys
+- Get a new key from https://console.groq.com/keys
 
 **PDF generation fails**
 - Ensure ReportLab is installed: `pip install reportlab`

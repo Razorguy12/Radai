@@ -194,6 +194,3 @@ Update the `model` parameter in the `generate_report()` function to use a differ
 - Ensure ReportLab is installed: `pip install reportlab`
 - Check write permissions in the current directory
 
-## License
-
-This project is provided as-is for educational and demonstration purposes.

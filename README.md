@@ -120,6 +120,4 @@ radiology/
 - Edits are persisted to the database.
 - Default admin user is seeded on first startup (see `main.py`).
 
-## License
 
-Provided as-is for educational and demonstration purposes.

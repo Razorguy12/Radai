@@ -1,0 +1,66 @@
+[
+  {
+    "id": "ct-chest",
+    "name": "CT Chest",
+    "modality": "CT",
+    "study_type": "Chest w/ Contrast",
+    "study_info": "CT Chest w/ Contrast",
+    "clinical_info": "Evaluate for pulmonary nodules, masses, or interstitial disease"
+  },
+  {
+    "id": "ct-abdomen",
+    "name": "CT Abdomen/Pelvis",
+    "modality": "CT",
+    "study_type": "Abdomen and Pelvis w/ Contrast",
+    "study_info": "CT Abdomen and Pelvis w/ Contrast",
+    "clinical_info": "Abdominal pain, rule out appendicitis or other acute pathology"
+  },
+  {
+    "id": "mri-brain",
+    "name": "MRI Brain",
+    "modality": "MRI",
+    "study_type": "Brain w/ and w/o Contrast",
+    "study_info": "MRI Brain w/ and w/o Contrast",
+    "clinical_info": "Headache, rule out intracranial mass or vascular abnormality"
+  },
+  {
+    "id": "mri-spine",
+    "name": "MRI Lumbar Spine",
+    "modality": "MRI",
+    "study_type": "Lumbar Spine w/o Contrast",
+    "study_info": "MRI Lumbar Spine w/o Contrast",
+    "clinical_info": "Low back pain with radiculopathy, rule out disc herniation"
+  },
+  {
+    "id": "xray-chest",
+    "name": "Chest X-ray",
+    "modality": "X-ray",
+    "study_type": "Chest PA and Lateral",
+    "study_info": "Chest X-ray PA and Lateral",
+    "clinical_info": "Cough, fever, rule out pneumonia"
+  },
+  {
+    "id": "us-abdomen",
+    "name": "US Abdomen",
+    "modality": "Ultrasound",
+    "study_type": "Complete Abdomen",
+    "study_info": "Ultrasound Complete Abdomen",
+    "clinical_info": "Right upper quadrant pain, evaluate gallbladder and liver"
+  },
+  {
+    "id": "mammography",
+    "name": "Mammography",
+    "modality": "Mammography",
+    "study_type": "Screening Bilateral",
+    "study_info": "Screening Mammography Bilateral",
+    "clinical_info": "Routine screening mammography"
+  },
+  {
+    "id": "pet-ct",
+    "name": "PET/CT",
+    "modality": "PET",
+    "study_type": "Whole Body FDG",
+    "study_info": "PET/CT Whole Body FDG",
+    "clinical_info": "Oncologic staging or restaging"
+  }
+]

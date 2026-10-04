@@ -1,196 +1,125 @@
-# Radiology Report Generator
+# RadAI Reports — Radiology Portal
 
-A FastAPI-based system that generates professional radiology reports using Groq's LLM (Qwen 2.5 32B) and converts them to PDF format.
+A FastAPI + React portal for radiologists to generate AI-assisted structured reports, review and edit them, and export professional PDFs.
 
 ## Features
 
-- **Pydantic Models**: Structured radiology report format with findings, impressions, and recommendations
-- **LLM-Powered Generation**: Uses Groq (Qwen 2.5 32B) to generate realistic radiology reports from key information
-- **PDF Export**: Converts structured reports to professionally formatted PDF documents
-- **FastAPI REST API**: Easy-to-use endpoints for report generation and PDF download
+- **React SPA** — Landing page, doctor dashboard, multi-step report wizard, preview/edit, admin panel
+- **AI Report Generation** — Groq LLM produces structured findings, impressions, and recommendations
+- **Doctor-in-the-Loop** — Edit reports inline, save to database, mark as draft or final
+- **Voice Dictation & PDF Uploads** — Dictate clinical impressions directly via microphone (transcribed in real-time via Groq Whisper) or upload patient history PDFs to extract findings automatically
+- **Standalone Medical Scan Viewer** — Attach study scans (CT, MRI, X-ray); view scans alone in an interactive darkroom viewer with film negative inversion mode (`Invert (Film)`) and zoom controls without cluttering the written report
+- **Clean Unicode PDF Export** — High-resolution ReportLab PDF generation with TrueType Unicode font support (`LiberationSans`) and text sanitization (no missing glyphs or black blocks)
+- **Mobile-Responsive UI** — Fully responsive mobile design with natural non-sticky scrolling navigation and responsive drawer menu
+- **Modality Templates** — Quick-start templates for CT Chest, MRI Brain, Ultrasound, and more
+- **JWT Auth** — Secure login with role-based admin user management
 
 ## Setup
 
-### 1. Install Dependencies
+### 1. Backend
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env
+# Edit .env and add GROQ_API_KEY (and optionally DATABASE_URL, SECRET_KEY)
 ```
 
-### 2. Configure API Key
-
-Create a `.env` file in the project root:
+### 2. Frontend
 
 ```bash
-cp .env.example .env
+cd web
+npm install
+npm run build   # production build → web/dist/
 ```
 
-Edit `.env` and add your Groq API key:
+### 3. Run
 
+**Development** (recommended — hot reload for frontend):
+
+```bash
+# Terminal 1 — API
+python -m uvicorn main:app --reload
+
+# Terminal 2 — React dev server (proxies /api to :8000)
+cd web && npm run dev
 ```
-GROQ_API_KEY=gsk_your-key-here
+
+Open `http://localhost:5173`
+
+**Production** (single server serves API + built SPA):
+
+```bash
+cd web && npm run build
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+Open `http://localhost:8000`
+
+API docs: `http://localhost:8000/docs`
 
 ## Project Structure
 
 ```
 radiology/
-├── main.py           # FastAPI application with endpoints
+├── main.py              # FastAPI app, API routes, static SPA serving
+├── auth.py              # JWT + bcrypt authentication
+├── database.py          # SQLAlchemy User/Report models & migrations
 ├── model/
-│   └── model.py      # Pydantic models, LLM generation, PDF export
-├── example.py        # Example usage script
-├── requirements.txt  # Python dependencies
-├── .env.example      # Environment variable template
-└── README.md         # This file
+│   ├── model.py         # Pydantic schemas, Groq LLM integration, ReportLab PDF generator
+│   └── templates.json   # Modality study templates
+├── web/                 # Modern React + Vite frontend
+│   ├── src/
+│   │   ├── pages/       # Landing, Login, Dashboard, Generate, ReportPreview, Admin
+│   │   ├── components/  # AppHeader, ScanModal, AudioPdfControls, ReportCard, LoadingOverlay
+│   │   ├── api/         # Axios API clients
+│   │   └── context/     # AuthContext
+│   └── dist/            # Production build output
+└── frontend/legacy/     # Archived vanilla HTML (pre-React)
 ```
 
-## Usage
+## Routes
 
-### Option 1: Command Line Example
+| Route | Description |
+|-------|-------------|
+| `/` | Public landing page |
+| `/login` | Doctor sign-in |
+| `/dashboard` | Report history, stats, search/filter, and quick scan view |
+| `/generate` | 4-step wizard with templates, voice dictation, PDF extract, and scan attachment |
+| `/reports/:id` | Preview, edit, save, finalize, download PDF, and view scan alone |
+| `/admin` | User management (admin only) |
 
-```bash
-python example.py
-```
+## API Endpoints
 
-This runs example radiology reports (chest X-ray and CT scan) and generates PDFs.
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| POST | `/api/token` | Public | Login & JWT generation |
+| GET | `/api/reports` | User | List own reports |
+| GET | `/api/reports/{id}` | User | Get single report with scan data |
+| PATCH | `/api/reports/{id}` | User | Save edited report |
+| PATCH | `/api/reports/{id}/status` | User | Set draft/final |
+| POST | `/api/generate-report` | User | Generate + save report |
+| POST | `/api/create-pdf-from-report` | User | Download clean formatted PDF |
+| POST | `/api/extract-text-from-pdf` | User | Extract text from uploaded clinical PDF |
+| POST | `/api/transcribe-audio` | User | Transcribe voice dictation audio via Groq Whisper |
+| GET | `/api/templates` | User | Modality templates |
+| GET | `/api/dashboard/stats` | User | Dashboard statistics |
+| GET/POST | `/api/users` | Admin | List/create users |
 
-### Option 2: FastAPI REST API
+## Environment Variables
 
-Start the server:
-
-```bash
-python -m uvicorn main:app --reload
-```
-
-The API will be available at `http://localhost:8000`
-
-**Interactive API Documentation**: Visit `http://localhost:8000/docs`
-
-#### Endpoints
-
-**1. Health Check**
-```
-GET /health
-```
-
-**2. Generate Report (JSON)**
-```
-POST /generate-report
-
-Request body:
-{
-  "patient_info": "Patient Name: John Doe, ID: PAT-001, Age: 55",
-  "study_info": "Modality: Chest X-ray, Study: PA and Lateral, Date: 2024-06-02",
-  "clinical_info": "Chief complaint: Persistent cough for 2 weeks"
-}
-
-Response: RadiologyReport object
-```
-
-**3. Generate Report with PDF**
-```
-POST /generate-report-pdf
-
-Same request body as /generate-report
-
-Response: PDF file download
-```
-
-## Report Format
-
-The system generates reports with the following structure:
-
-```
-RadiologyReport
-├── patient_name: str
-├── patient_id: str
-├── study_date: str (YYYY-MM-DD)
-├── modality: str (CT, MRI, X-ray, Ultrasound, etc.)
-├── study_type: str
-├── findings: list[RadiologyFinding]
-│   ├── location: str
-│   ├── description: str
-│   └── severity: str (mild, moderate, severe)
-├── impression: str
-├── recommendations: list[str]
-└── radiologist_name: str
-```
-
-## Example Usage
-
-### Python
-
-```python
-import model.model as model
-
-# Input information
-user_input = """
-Patient Information: John Doe, ID: PAT-001, Age: 55, Male
-Study Information: Chest X-ray, PA and Lateral views, 2024-06-02
-Clinical Information: Persistent cough for 2 weeks, no fever
-"""
-
-# Generate report
-report = model.generate_report(user_input)
-
-# Convert to PDF
-pdf_path = model.report_to_pdf(report)
-print(f"PDF saved to: {pdf_path}")
-```
-
-### cURL
-
-```bash
-curl -X POST "http://localhost:8000/generate-report" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patient_info": "Patient Name: John Doe, ID: PAT-001",
-    "study_info": "Modality: Chest X-ray, Date: 2024-06-02",
-    "clinical_info": "Chest pain, shortness of breath"
-  }'
-```
-
-## Dependencies
-
-- **FastAPI**: Web framework
-- **Pydantic**: Data validation and serialization
-- **Groq**: LLM API for report generation
-- **ReportLab**: PDF generation
-- **python-dotenv**: Environment variable management
-- **Uvicorn**: ASGI server
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes | Groq API key for LLM and Whisper transcription |
+| `DATABASE_URL` | No | PostgreSQL URL (falls back to SQLite) |
+| `SECRET_KEY` | No | JWT secret (change in production) |
 
 ## Notes
 
-- The system uses Qwen 2.5 32B model from Groq for report generation (update the model name in `model.py` if needed)
-- Generated reports are realistic but plausible - use for demonstration and testing only
-- PDFs are saved to the current working directory with timestamp-based filenames
-- All timestamps in generated reports use UTC
+- Reports have `draft` or `final` status; finalized reports cannot be edited.
+- Attached scan images remain independent of the clinical text report and can be viewed on demand in the standalone viewer modal.
+- Edits are persisted to the database.
+- Default admin user is seeded on first startup (see `main.py`).
 
-## Customization
+## License
 
-### Modify Report Format
-
-Edit the `RadiologyReport` and `RadiologyFinding` Pydantic models in `model/model.py` to change the report structure.
-
-### Customize PDF Styling
-
-Modify the `report_to_pdf()` function in `model/model.py` to change colors, fonts, and layout.
-
-### Change LLM Model
-
-Update the `model` parameter in the `generate_report()` function to use a different Groq model.
-
-## Troubleshooting
-
-**"Missing GROQ_API_KEY"**
-- Make sure `.env` file exists with your API key
-- Check that the key is valid and has sufficient credits
-
-**"Invalid API Key"**
-- Verify the API key in `.env` is correct
-- Get a new key from https://console.groq.com/keys
-
-**PDF generation fails**
-- Ensure ReportLab is installed: `pip install reportlab`
-- Check write permissions in the current directory
-
+Provided as-is for educational and demonstration purposes.
